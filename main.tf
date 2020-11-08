@@ -63,6 +63,8 @@ POLICY
     aws_cognito_identity_pool.identity,
     aws_iam_role.cognito_authenticated,
     aws_iam_role.elasticsearch_access_cognito,
+    aws_iam_role_policy.elasticsearch_access_cognito,
+    aws_iam_role_policy.kibana_sns_policy,
   ]
 
   lifecycle {
