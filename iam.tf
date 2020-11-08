@@ -107,7 +107,7 @@ EOF
 }
 
 resource "aws_iam_role" "elasticsearch_access_cognito" {
-  name = "ESAccessCognito"
+  name = "${var.name}_ESAccessCognito"
 
   assume_role_policy = <<EOF
 {
@@ -177,14 +177,14 @@ data "aws_iam_policy_document" "elasticsearch_access_cognito" {
 }
 
 resource "aws_iam_role_policy" "elasticsearch_access_cognito" {
-  name   = "elasticsearch_access_cognito_policy"
+  name   = "${var.name}_elasticsearch_access_cognito_policy"
   policy = data.aws_iam_policy_document.elasticsearch_access_cognito.json
   role   = aws_iam_role.elasticsearch_access_cognito.id
 }
 
 // IAM Role to allow Kibana monitoring send notifications to sns topic
 resource "aws_iam_role" "kibana_sns_role" {
-  name = "kibana_sns_role"
+  name = "${var.name}_kibana_sns_role"
 
   assume_role_policy = <<EOF
 {
@@ -230,7 +230,7 @@ data "aws_iam_policy_document" "kibana_sns_policy" {
 }
 
 resource "aws_iam_role_policy" "kibana_sns_policy" {
-  name   = "kibana_sns_policy"
+  name   = "${var.name}_kibana_sns_policy"
   role   = aws_iam_role.kibana_sns_role.id
   policy = data.aws_iam_policy_document.kibana_sns_policy.json
 }
