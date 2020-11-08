@@ -1,5 +1,165 @@
+resource "aws_iam_role" "cognito_unauthenticated" {
+  name = "cognito_unauthenticated"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Federated": "cognito-identity.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_role_policy" "cognito_unauthenticated" {
+  name = "unauthenticated_policy"
+  role = aws_iam_role.cognito_unauthenticated.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "mobileanalytics:PutEvents",
+        "cognito-sync:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_role" "cognito_apidocs_authenticated" {
+  name = "cognito_apidocs_authenticated"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "cognito-identity.amazonaws.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.identity.id}"
+        },
+        "ForAnyValue:StringLike": {
+          "cognito-identity.amazonaws.com:amr": "authenticated"
+        }
+      }
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_role_policy" "cognito_apidocs_authenticated" {
+  name = "authenticated_apidocs_policy"
+  role = aws_iam_role.cognito_apidocs_authenticated.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "mobileanalytics:PutEvents",
+        "cognito-sync:*",
+        "cognito-identity:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_role" "cognito_apidocs_unauthenticated" {
+  name = "cognito_apidocs_unauthenticated"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Federated": "cognito-identity.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_role_policy" "cognito_apidocs_unauthenticated" {
+  name = "unauthenticated_apidocs_policy"
+  role = aws_iam_role.cognito_apidocs_unauthenticated.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "mobileanalytics:PutEvents",
+        "cognito-sync:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_cognito_identity_pool_roles_attachment" "apidocs" {
+  identity_pool_id = aws_cognito_identity_pool.identity.id
+
+  roles = {
+    "authenticated"   = aws_iam_role.cognito_apidocs_authenticated.arn
+    "unauthenticated" = aws_iam_role.cognito_apidocs_unauthenticated.arn
+  }
+
+  lifecycle {
+    ignore_changes = [
+      id,
+      identity_pool_id,
+      roles,
+    ]
+  }
+}
+
 resource "aws_iam_role" "cognito_authenticated" {
-  name = "${var.name}_cognito_authenticated"
+  name = "cognito_authenticated"
 
   assume_role_policy = <<EOF
 {
@@ -27,7 +187,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cognito_authenticated" {
-  name = "${var.name}_authenticated_policy"
+  name = "authenticated_policy"
   role = aws_iam_role.cognito_authenticated.id
 
   policy = <<EOF
@@ -39,7 +199,8 @@ resource "aws_iam_role_policy" "cognito_authenticated" {
       "Action": [
         "mobileanalytics:PutEvents",
         "cognito-sync:*",
-        "cognito-identity:*"
+        "cognito-identity:*",
+        "cognito-idp:*"
       ],
       "Resource": [
         "*"
@@ -51,71 +212,17 @@ EOF
 
 }
 
-resource "aws_iam_role" "cognito_unauthenticated" {
-  name = "${var.name}_cognito_unauthenticated"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-
-}
-
-resource "aws_iam_role_policy" "cognito_unauthenticated" {
-  name = "${var.name}_unauthenticated_policy"
-  role = aws_iam_role.cognito_unauthenticated.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "mobileanalytics:PutEvents",
-        "cognito-sync:*"
-      ],
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOF
-
-}
-
-resource "aws_cognito_identity_pool_roles_attachment" "cognito" {
+resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = aws_cognito_identity_pool.identity.id
 
   roles = {
     "authenticated"   = aws_iam_role.cognito_authenticated.arn
     "unauthenticated" = aws_iam_role.cognito_unauthenticated.arn
   }
-
-  lifecycle {
-    ignore_changes = [
-      id,
-      identity_pool_id,
-      roles,
-    ]
-  }
 }
 
-
 resource "aws_iam_role" "elasticsearch_access_cognito" {
-  name = "${var.name}_ESAccessCognito"
+  name = "ESAccessCognito"
 
   assume_role_policy = <<EOF
 {
@@ -185,14 +292,14 @@ data "aws_iam_policy_document" "elasticsearch_access_cognito" {
 }
 
 resource "aws_iam_role_policy" "elasticsearch_access_cognito" {
-  name   = "${var.name}_elasticsearch_access_cognito_policy"
+  name   = "elasticsearch_access_cognito_policy"
   policy = data.aws_iam_policy_document.elasticsearch_access_cognito.json
   role   = aws_iam_role.elasticsearch_access_cognito.id
 }
 
 // IAM Role to allow Kibana monitoring send notifications to sns topic
 resource "aws_iam_role" "kibana_sns_role" {
-  name = "${var.name}_kibana_sns_role"
+  name = "kibana_sns_role"
 
   assume_role_policy = <<EOF
 {
@@ -238,7 +345,28 @@ data "aws_iam_policy_document" "kibana_sns_policy" {
 }
 
 resource "aws_iam_role_policy" "kibana_sns_policy" {
-  name   = "${var.name}_kibana_sns_policy"
+  name   = "kibana_sns_policy"
   role   = aws_iam_role.kibana_sns_role.id
   policy = data.aws_iam_policy_document.kibana_sns_policy.json
+}
+
+//VPC Role for flow logs
+resource "aws_iam_role" "vpc_flow_logs" {
+  name = "vpc_flow_logs_role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "vpc-flow-logs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
 }
