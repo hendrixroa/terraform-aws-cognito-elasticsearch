@@ -1,5 +1,5 @@
 resource "aws_iam_role" "cognito_unauthenticated" {
-  name = "cognito_unauthenticated"
+  name = "${var.name}_cognito_unauthenticated"
 
   assume_role_policy = <<EOF
 {
@@ -20,7 +20,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cognito_unauthenticated" {
-  name = "unauthenticated_policy"
+  name = "${var.name}_unauthenticated_policy"
   role = aws_iam_role.cognito_unauthenticated.id
 
   policy = <<EOF
@@ -44,7 +44,7 @@ EOF
 }
 
 resource "aws_iam_role" "cognito_apidocs_authenticated" {
-  name = "cognito_apidocs_authenticated"
+  name = "${var.name}_cognito_apidocs_authenticated"
 
   assume_role_policy = <<EOF
 {
@@ -58,7 +58,7 @@ resource "aws_iam_role" "cognito_apidocs_authenticated" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.identity.id}"
+          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.apidocs_identity.id}"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
@@ -72,7 +72,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cognito_apidocs_authenticated" {
-  name = "authenticated_apidocs_policy"
+  name = "${var.name}_authenticated_apidocs_policy"
   role = aws_iam_role.cognito_apidocs_authenticated.id
 
   policy = <<EOF
@@ -97,7 +97,7 @@ EOF
 }
 
 resource "aws_iam_role" "cognito_apidocs_unauthenticated" {
-  name = "cognito_apidocs_unauthenticated"
+  name = "${var.name}_cognito_apidocs_unauthenticated"
 
   assume_role_policy = <<EOF
 {
@@ -118,7 +118,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cognito_apidocs_unauthenticated" {
-  name = "unauthenticated_apidocs_policy"
+  name = "${var.name}_unauthenticated_apidocs_policy"
   role = aws_iam_role.cognito_apidocs_unauthenticated.id
 
   policy = <<EOF
@@ -142,7 +142,7 @@ EOF
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "apidocs" {
-  identity_pool_id = aws_cognito_identity_pool.identity.id
+  identity_pool_id = aws_cognito_identity_pool.apidocs_identity.id
 
   roles = {
     "authenticated"   = aws_iam_role.cognito_apidocs_authenticated.arn
@@ -159,7 +159,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "apidocs" {
 }
 
 resource "aws_iam_role" "cognito_authenticated" {
-  name = "cognito_authenticated"
+  name = "${var.name}_cognito_authenticated"
 
   assume_role_policy = <<EOF
 {
@@ -173,7 +173,7 @@ resource "aws_iam_role" "cognito_authenticated" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.identity.id}"
+          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.apidocs_identity.id}"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
@@ -187,7 +187,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cognito_authenticated" {
-  name = "authenticated_policy"
+  name = "${var.name}_authenticated_policy"
   role = aws_iam_role.cognito_authenticated.id
 
   policy = <<EOF
@@ -213,7 +213,7 @@ EOF
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  identity_pool_id = aws_cognito_identity_pool.identity.id
+  identity_pool_id = aws_cognito_identity_pool.apidocs_identity.id
 
   roles = {
     "authenticated"   = aws_iam_role.cognito_authenticated.arn
@@ -222,7 +222,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 }
 
 resource "aws_iam_role" "elasticsearch_access_cognito" {
-  name = "ESAccessCognito"
+  name = "${var.name}_ESAccessCognito"
 
   assume_role_policy = <<EOF
 {
@@ -292,14 +292,14 @@ data "aws_iam_policy_document" "elasticsearch_access_cognito" {
 }
 
 resource "aws_iam_role_policy" "elasticsearch_access_cognito" {
-  name   = "elasticsearch_access_cognito_policy"
+  name   = "${var.name}_elasticsearch_access_cognito_policy"
   policy = data.aws_iam_policy_document.elasticsearch_access_cognito.json
   role   = aws_iam_role.elasticsearch_access_cognito.id
 }
 
 // IAM Role to allow Kibana monitoring send notifications to sns topic
 resource "aws_iam_role" "kibana_sns_role" {
-  name = "kibana_sns_role"
+  name = "${var.name}_kibana_sns_role"
 
   assume_role_policy = <<EOF
 {
@@ -345,7 +345,7 @@ data "aws_iam_policy_document" "kibana_sns_policy" {
 }
 
 resource "aws_iam_role_policy" "kibana_sns_policy" {
-  name   = "kibana_sns_policy"
+  name   = "${var.name}_kibana_sns_policy"
   role   = aws_iam_role.kibana_sns_role.id
   policy = data.aws_iam_policy_document.kibana_sns_policy.json
 }

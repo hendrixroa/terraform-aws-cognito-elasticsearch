@@ -1,5 +1,5 @@
-// Cognito User pool to allow authentication
-resource "aws_cognito_user_pool" "pool" {
+// Cognito User pool to allow authentication swagger docs.
+resource "aws_cognito_user_pool" "apidocs_pool" {
   name = var.name
 
   admin_create_user_config {
@@ -22,13 +22,14 @@ resource "aws_cognito_user_pool" "pool" {
   }
 }
 
-resource "aws_cognito_identity_pool" "identity" {
-  identity_pool_name               = "Identity"
+// Identity pool to allow access into apidocs
+resource "aws_cognito_identity_pool" "apidocs_identity" {
+  identity_pool_name               = "APIDocs Identity"
   allow_unauthenticated_identities = true
 
   cognito_identity_providers {
-    client_id               = aws_cognito_user_pool_client.client.id
-    provider_name           = aws_cognito_user_pool.pool.endpoint
+    client_id               = aws_cognito_user_pool_client.apidocs_client.id
+    provider_name           = aws_cognito_user_pool.apidocs_pool.endpoint
     server_side_token_check = false
   }
 
@@ -41,20 +42,21 @@ resource "aws_cognito_identity_pool" "identity" {
 }
 
 // App client
-resource "aws_cognito_user_pool_client" "client" {
-  name = var.name
+resource "aws_cognito_user_pool_client" "apidocs_client" {
+  name = "APIDocs"
 
-  user_pool_id = aws_cognito_user_pool.pool.id
+  user_pool_id = aws_cognito_user_pool.apidocs_pool.id
 
   generate_secret     = false
   explicit_auth_flows = ["USER_PASSWORD_AUTH"]
 }
 
-resource "aws_cognito_user_pool_domain" "domain" {
+// User pool domain to render the login page to access to kibana
+resource "aws_cognito_user_pool_domain" "apidocs_domain" {
   domain       = var.cognito_domain
-  user_pool_id = aws_cognito_user_pool.pool.id
+  user_pool_id = aws_cognito_user_pool.apidocs_pool.id
 
-  depends_on = [aws_cognito_user_pool.pool]
+  depends_on = [aws_cognito_user_pool.apidocs_pool]
 
   lifecycle {
     ignore_changes = [

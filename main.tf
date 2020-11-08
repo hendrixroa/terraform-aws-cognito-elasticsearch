@@ -10,6 +10,7 @@ resource "aws_elasticsearch_domain" "elasticsearch" {
     instance_count = var.elasticsearch_instance_count
   }
 
+
   snapshot_options {
     automated_snapshot_start_hour = 23
   }
@@ -39,13 +40,13 @@ POLICY
   ebs_options {
     ebs_enabled = true
     volume_type = "standard"
-    volume_size = var.elasticsearch_disk_size
+    volume_size = 35
   }
 
   cognito_options {
     enabled          = true
-    user_pool_id     = aws_cognito_user_pool.pool.id
-    identity_pool_id = aws_cognito_identity_pool.identity.id
+    user_pool_id     = aws_cognito_user_pool.apidocs_pool.id
+    identity_pool_id = aws_cognito_identity_pool.apidocs_identity.id
     role_arn         = aws_iam_role.elasticsearch_access_cognito.arn
   }
 
@@ -58,13 +59,11 @@ POLICY
   }
 
   depends_on = [
-    aws_cognito_user_pool.pool,
-    aws_cognito_user_pool_domain.domain,
-    aws_cognito_identity_pool.identity,
+    aws_cognito_user_pool.apidocs_pool,
+    aws_cognito_user_pool_domain.apidocs_domain,
+    aws_cognito_identity_pool.apidocs_identity,
     aws_iam_role.cognito_authenticated,
     aws_iam_role.elasticsearch_access_cognito,
-    aws_iam_role_policy.elasticsearch_access_cognito,
-    aws_iam_role_policy.kibana_sns_policy,
   ]
 
   lifecycle {
