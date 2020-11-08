@@ -39,8 +39,7 @@ resource "aws_iam_role_policy" "cognito_authenticated" {
       "Action": [
         "mobileanalytics:PutEvents",
         "cognito-sync:*",
-        "cognito-identity:*",
-        "cognito-idp:*"
+        "cognito-identity:*"
       ],
       "Resource": [
         "*"
@@ -50,15 +49,6 @@ resource "aws_iam_role_policy" "cognito_authenticated" {
 }
 EOF
 
-}
-
-resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  identity_pool_id = aws_cognito_identity_pool.identity.id
-
-  roles = {
-    "authenticated"   = aws_iam_role.cognito_authenticated.arn
-    "unauthenticated" = aws_iam_role.cognito_unauthenticated.arn
-  }
 }
 
 resource "aws_iam_role" "cognito_unauthenticated" {
@@ -105,6 +95,24 @@ resource "aws_iam_role_policy" "cognito_unauthenticated" {
 EOF
 
 }
+
+resource "aws_cognito_identity_pool_roles_attachment" "cognito" {
+  identity_pool_id = aws_cognito_identity_pool.identity.id
+
+  roles = {
+    "authenticated"   = aws_iam_role.cognito_authenticated.arn
+    "unauthenticated" = aws_iam_role.cognito_unauthenticated.arn
+  }
+
+  lifecycle {
+    ignore_changes = [
+      id,
+      identity_pool_id,
+      roles,
+    ]
+  }
+}
+
 
 resource "aws_iam_role" "elasticsearch_access_cognito" {
   name = "${var.name}_ESAccessCognito"
