@@ -65,10 +65,6 @@ POLICY
     aws_iam_role.cognito_authenticated,
     aws_iam_role.elasticsearch_access_cognito,
   ]
-  
-  timeouts {
-    create = "2h"
-  }
 
   lifecycle {
     ignore_changes = [
