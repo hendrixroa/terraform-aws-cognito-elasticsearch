@@ -1,9 +1,9 @@
 output "elasticsearch_endpoint" {
-  value = aws_elasticsearch_domain.elasticsearch.endpoint
+  value = aws_elasticsearch_domain.es.endpoint
 }
 
 output "elasticsearch_arn" {
-  value = aws_elasticsearch_domain.elasticsearch.arn
+  value = aws_elasticsearch_domain.es.arn
 }
 
 output "kibana_sns_role" {

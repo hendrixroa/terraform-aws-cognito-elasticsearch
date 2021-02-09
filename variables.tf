@@ -5,7 +5,7 @@ variable "name" {}
 variable "elasticsearch_domain_name" {}
 
 variable "elasticsearch_version" {
-  default = "7.7"
+  default = "7.9"
 }
 
 variable "elasticsearch_instance" {

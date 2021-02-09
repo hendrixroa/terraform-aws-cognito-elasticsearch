@@ -1,41 +1,17 @@
-// - Enabled Cognito to access to Kibana<br/>
-// - Version Elasticsearch: 7.7<br/>
-// - Encryption at rest and node2node
-resource "aws_elasticsearch_domain" "elasticsearch" {
+module "cognito" {
+  source     = "./cognito"
+  region = var.region
+  name = var.name
+  cognito_domain = var.cognito_domain
+}
+
+resource "aws_elasticsearch_domain" "es" {
   domain_name           = var.elasticsearch_domain_name
   elasticsearch_version = var.elasticsearch_version
 
   cluster_config {
     instance_type  = var.elasticsearch_instance
-    instance_count = var.elasticsearch_instance_count
   }
-
-
-  snapshot_options {
-    automated_snapshot_start_hour = 23
-  }
-
-  access_policies = <<POLICY
-    {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Sid": "CognitoAccessPolicy",
-          "Effect": "Allow",
-          "Principal": {
-            "AWS": [
-              "arn:aws:sts::${var.account_id}:assumed-role/${aws_iam_role.cognito_authenticated.name}/CognitoIdentityCredentials",
-              "${var.account_id}"
-            ]
-          },
-          "Action": "es:*",
-          "Resource": "arn:aws:es:${var.region}:${var.account_id}:domain/${var.elasticsearch_domain_name}/*"
-        }
-      ]
-    }
-
-POLICY
-
 
   ebs_options {
     ebs_enabled = true
@@ -43,11 +19,17 @@ POLICY
     volume_size = 35
   }
 
+  advanced_options = {
+    "rest.action.multi.allow_explicit_index" = "true"
+  }
+
+  access_policies = data.aws_iam_policy_document.es_access_policy.json
+
   cognito_options {
-    enabled          = true
-    user_pool_id     = aws_cognito_user_pool.apidocs_pool.id
-    identity_pool_id = aws_cognito_identity_pool.apidocs_identity.id
-    role_arn         = aws_iam_role.elasticsearch_access_cognito.arn
+    enabled = true
+    user_pool_id = lookup(module.cognito.cognito_map, "user_pool")
+    identity_pool_id = lookup(module.cognito.cognito_map, "identity_pool")
+    role_arn = aws_iam_role.cognito_es_role.arn
   }
 
   encrypt_at_rest {
@@ -58,18 +40,14 @@ POLICY
     enabled = true
   }
 
-  depends_on = [
-    aws_cognito_user_pool.apidocs_pool,
-    aws_cognito_user_pool_domain.apidocs_domain,
-    aws_cognito_identity_pool.apidocs_identity,
-    aws_iam_role.cognito_authenticated,
-    aws_iam_role.elasticsearch_access_cognito,
-  ]
-
-  lifecycle {
-    ignore_changes = [
-      access_policies,
-      cognito_options,
-    ]
+  domain_endpoint_options {
+    enforce_https = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
+
+  snapshot_options {
+    automated_snapshot_start_hour = 23
+  }
+
+  depends_on = [aws_iam_service_linked_role.es, aws_iam_role_policy_attachment.cognito_es_attach]
 }
