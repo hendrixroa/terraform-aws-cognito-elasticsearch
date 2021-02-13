@@ -46,13 +46,3 @@ resource "aws_cognito_identity_pool" "identity_pool" {
 
   lifecycle {ignore_changes = [cognito_identity_providers]}
 }
-
-
-output "cognito_map" {
-  description = "cognito info"
-  value       = { "user_pool"        = aws_cognito_user_pool.user_pool.id
-    "identity_pool"    = aws_cognito_identity_pool.identity_pool.id
-    "auth_arn"         = aws_iam_role.authenticated.arn
-    "domain"           = "${aws_cognito_user_pool_domain.user_pool_domain.domain}.auth.${var.region}.amazoncognito.com"
-  }
-}
